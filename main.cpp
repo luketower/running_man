@@ -28,7 +28,7 @@ enum keyboard_press
 global game_window GameWindow;
 global int UpdateCount = 0;
 
-void CharacterRun(SDL_Rect * TextureRect, int UpdateCount, keyboard_press KeyboardPress)
+void CharacterRun(SDL_Rect *TextureRect, int UpdateCount)
 {
     TextureRect->y = 37;
 
@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
     SDL_Texture *SpriteSheet = NULL;
     SDL_Surface *TmpSurface = IMG_Load("assets/adventurer-v1.5-Sheet.png");
     SpriteSheet = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
+    SDL_RendererFlip TextureFlip = SDL_FLIP_NONE;
     SDL_FreeSurface(TmpSurface);
 
     SDL_Rect WindowRect = {
@@ -126,8 +127,11 @@ int main(int argc, char *argv[])
 
     SDL_QueryTexture(SpriteSheet, NULL, NULL, &TextureRect.w, &TextureRect.h);
 
-    TextureRect.w = 50; // Not sure why this number works.
-    TextureRect.h = 37;
+    // NOTE(luke): Not sure why this TextureRect.w /= 7 doesn't work.
+    // Eyeballing the results landed at 50, but it'd be nice to get
+    // this value programmatically.
+    TextureRect.w = 50;
+    TextureRect.h /= 16;
 
     u32 FrameStart;
     float ElapsedTime;
@@ -160,9 +164,11 @@ int main(int argc, char *argv[])
                         break;
                     case SDLK_RIGHT:
                         KeyboardPress = KeyboardPress_Right;
+                        TextureFlip = SDL_FLIP_NONE;
                         break;
                     case SDLK_LEFT:
                         KeyboardPress = KeyboardPress_Left;
+                        TextureFlip = SDL_FLIP_HORIZONTAL;
                         break;
                     case SDLK_UP:
                         KeyboardPress = KeyboardPress_Up;
@@ -194,18 +200,19 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (KeyboardPress == KeyboardPress_Right)
+        switch(KeyboardPress)
         {
-            CharacterRun(&TextureRect, UpdateCount, KeyboardPress);
-        }
-        else
-        {
-            StandIdle(&TextureRect, UpdateCount);
+            case KeyboardPress_Right:
+            case KeyboardPress_Left:
+                CharacterRun(&TextureRect, UpdateCount);
+                break;
+            default:
+                StandIdle(&TextureRect, UpdateCount);
         }
 
         SDL_assert(SpriteSheet);
         SDL_RenderClear(Renderer);
-        SDL_RenderCopy(Renderer, SpriteSheet, &TextureRect, &WindowRect);
+        SDL_RenderCopyEx(Renderer, SpriteSheet, &TextureRect, &WindowRect, 0, NULL, TextureFlip);
         SDL_RenderPresent(Renderer);
 
         if (UpdateCount < 149)
