@@ -21,11 +21,70 @@ enum keyboard_press
     KeyboardPress_Up,
     KeyboardPress_Down,
     KeyboardPress_Right,
+    KeyboardPress_Left,
     KeyboardPress_Space
 };
 
 global game_window GameWindow;
 global int UpdateCount = 0;
+
+void CharacterRun(SDL_Rect * TextureRect, int UpdateCount, keyboard_press KeyboardPress)
+{
+    TextureRect->y = 37;
+
+    if (UpdateCount < 25)
+    {
+        TextureRect->x = TextureRect->w * 1;
+    }
+    else if (UpdateCount  < 50)
+    {
+        TextureRect->x = TextureRect->w * 2;
+    }
+    else if (UpdateCount < 75)
+    {
+        TextureRect->x = TextureRect->w * 3;
+    }
+    else if (UpdateCount < 100)
+    {
+        TextureRect->x = TextureRect->w * 4;
+    }
+    else if (UpdateCount < 125)
+    {
+        TextureRect->x = TextureRect->w * 5;
+    }
+    else if (UpdateCount < 150)
+    {
+        TextureRect->x = TextureRect->w * 6;
+    }
+    else
+    {
+        TextureRect->x = 50;
+    }
+}
+
+void StandIdle(SDL_Rect *TextureRect, int UpdateCount)
+{
+    if (UpdateCount < 25)
+    {
+        TextureRect->x = 0;
+    }
+    else if (UpdateCount  < 50)
+    {
+        TextureRect->x = TextureRect->w * 1;
+    }
+    else if (UpdateCount < 75)
+    {
+        TextureRect->x = TextureRect->w * 2;
+    }
+    else if (UpdateCount < 100)
+    {
+        TextureRect->x = TextureRect->w * 3;
+    }
+    else
+    {
+        TextureRect->x = 0;
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -48,14 +107,27 @@ int main(int argc, char *argv[])
     SDL_Renderer* Renderer = SDL_CreateRenderer(Window, 0, SDL_RENDERER_ACCELERATED);
     SDL_assert(Renderer);
 
-    SDL_Texture *Texture;
-    SDL_Rect DestRect = {
+    SDL_Texture *SpriteSheet = NULL;
+    SDL_Surface *TmpSurface = IMG_Load("assets/adventurer-v1.5-Sheet.png");
+    SpriteSheet = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
+    SDL_FreeSurface(TmpSurface);
+
+    SDL_Rect WindowRect = {
         .h = 64,
         .w = 64,
         .x = (GameWindow.Width/2)-32,
         .y = (GameWindow.Height/2)-32
     };
 
+    SDL_Rect TextureRect = {
+        .x = 0,
+        .y = 0
+    };
+
+    SDL_QueryTexture(SpriteSheet, NULL, NULL, &TextureRect.w, &TextureRect.h);
+
+    TextureRect.w = 50; // Not sure why this number works.
+    TextureRect.h = 37;
 
     u32 FrameStart;
     float ElapsedTime;
@@ -89,6 +161,9 @@ int main(int argc, char *argv[])
                     case SDLK_RIGHT:
                         KeyboardPress = KeyboardPress_Right;
                         break;
+                    case SDLK_LEFT:
+                        KeyboardPress = KeyboardPress_Left;
+                        break;
                     case SDLK_UP:
                         KeyboardPress = KeyboardPress_Up;
                         break;
@@ -108,7 +183,10 @@ int main(int argc, char *argv[])
                 switch(KeyCode)
                 {
                     case SDLK_RIGHT:
+                    case SDLK_LEFT:
                         KeyboardPress = KeyboardPress_Undefined;
+                        TextureRect.x = 0;
+                        TextureRect.y = 0;
                         break;
                     default:
                         break;
@@ -116,79 +194,18 @@ int main(int argc, char *argv[])
             }
         }
 
-        SDL_Surface *TmpSurface;
-
         if (KeyboardPress == KeyboardPress_Right)
         {
-            if (UpdateCount < 25)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-00.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount  < 50)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-01.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 75)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-02.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 100)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-03.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 125)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-04.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 150)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-05.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-run-00.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
+            CharacterRun(&TextureRect, UpdateCount, KeyboardPress);
         }
         else
         {
-            if (UpdateCount < 25)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-idle-00.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount  < 50)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-idle-01.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 75)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-idle-02.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else if (UpdateCount < 100)
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-idle-03.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
-            else
-            {
-                TmpSurface = IMG_Load("assets/individual_sprites/adventurer-idle-00.png");
-                Texture = SDL_CreateTextureFromSurface(Renderer, TmpSurface);
-            }
+            StandIdle(&TextureRect, UpdateCount);
         }
 
-        SDL_FreeSurface(TmpSurface);
-        SDL_assert(Texture);
+        SDL_assert(SpriteSheet);
         SDL_RenderClear(Renderer);
-        SDL_RenderCopy(Renderer, Texture, NULL, &DestRect);
+        SDL_RenderCopy(Renderer, SpriteSheet, &TextureRect, &WindowRect);
         SDL_RenderPresent(Renderer);
 
         if (UpdateCount < 149)
@@ -211,7 +228,7 @@ int main(int argc, char *argv[])
 
     SDL_DestroyWindow(Window);
     SDL_DestroyRenderer(Renderer);
-    SDL_DestroyTexture(Texture);
+    SDL_DestroyTexture(SpriteSheet);
     SDL_Quit();
 
     return 0;
