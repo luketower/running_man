@@ -15,22 +15,43 @@ struct game_window
     int BytesPerPixel;
 };
 
-enum keyboard_press
+struct character_state
 {
-    KeyboardPress_Undefined,
-    KeyboardPress_Up,
-    KeyboardPress_Down,
-    KeyboardPress_Right,
-    KeyboardPress_Left,
-    KeyboardPress_Space
+    bool IsRunning;
+    bool IsJumping;
 };
 
+global character_state CharacterState;
 global game_window GameWindow;
 global int UpdateCount = 0;
 
+void CharacterJump(SDL_Rect *TextureRect, int UpdateCount)
+{
+    TextureRect->y = TextureRect->h * 2;
+    TextureRect->x = 0;
+
+    if (UpdateCount < 25)
+    {
+        TextureRect->x = TextureRect->w * 1;
+    }
+    else if (UpdateCount  < 50)
+    {
+        TextureRect->x = TextureRect->w * 2;
+    }
+    else if (UpdateCount < 75)
+    {
+        TextureRect->x = TextureRect->w * 3;
+    }
+    else
+    {
+        TextureRect->x = TextureRect->w * 1;
+    }
+
+}
+
 void CharacterRun(SDL_Rect *TextureRect, int UpdateCount)
 {
-    TextureRect->y = 37;
+    TextureRect->y = TextureRect->h;
 
     if (UpdateCount < 25)
     {
@@ -62,7 +83,7 @@ void CharacterRun(SDL_Rect *TextureRect, int UpdateCount)
     }
 }
 
-void StandIdle(SDL_Rect *TextureRect, int UpdateCount)
+void CharacterIdle(SDL_Rect *TextureRect, int UpdateCount)
 {
     if (UpdateCount < 25)
     {
@@ -91,6 +112,8 @@ int main(int argc, char *argv[])
     SDL_Init(SDL_INIT_VIDEO);
 
     bool Running = true;
+    CharacterState.IsRunning = false;
+    CharacterState.IsJumping = false;
     GameWindow.Height = 600;
     GameWindow.Width = 800;
     GameWindow.BytesPerPixel = 4;
@@ -135,8 +158,6 @@ int main(int argc, char *argv[])
 
     u32 FrameStart;
     float ElapsedTime;
-    keyboard_press KeyboardPress = KeyboardPress_Undefined;
-
 
     while(Running)
     {
@@ -162,24 +183,18 @@ int main(int argc, char *argv[])
                     case SDLK_q:
                         Running = false;
                         break;
+                    case SDLK_UP:
+                        CharacterState.IsJumping = true;
+                        break;
                     case SDLK_RIGHT:
-                        KeyboardPress = KeyboardPress_Right;
+                        CharacterState.IsRunning = true;
                         TextureFlip = SDL_FLIP_NONE;
                         break;
                     case SDLK_LEFT:
-                        KeyboardPress = KeyboardPress_Left;
+                        CharacterState.IsRunning = true;
                         TextureFlip = SDL_FLIP_HORIZONTAL;
                         break;
-                    case SDLK_UP:
-                        KeyboardPress = KeyboardPress_Up;
-                        break;
-                    case SDLK_DOWN:
-                        KeyboardPress = KeyboardPress_Down;
-                        break;
-                    case SDLK_SPACE:
-                        KeyboardPress = KeyboardPress_Space;
                     default:
-                        KeyboardPress = KeyboardPress_Undefined;
                         break;
                 }
             }
@@ -190,7 +205,7 @@ int main(int argc, char *argv[])
                 {
                     case SDLK_RIGHT:
                     case SDLK_LEFT:
-                        KeyboardPress = KeyboardPress_Undefined;
+                        CharacterState.IsRunning = false;
                         TextureRect.x = 0;
                         TextureRect.y = 0;
                         break;
@@ -200,14 +215,24 @@ int main(int argc, char *argv[])
             }
         }
 
-        switch(KeyboardPress)
+        if (CharacterState.IsJumping)
         {
-            case KeyboardPress_Right:
-            case KeyboardPress_Left:
-                CharacterRun(&TextureRect, UpdateCount);
-                break;
-            default:
-                StandIdle(&TextureRect, UpdateCount);
+            if (UpdateCount > 100)
+            {
+                CharacterState.IsJumping = false;
+            }
+            else
+            {
+                CharacterJump(&TextureRect, UpdateCount);
+            }
+        }
+        else if (CharacterState.IsRunning)
+        {
+            CharacterRun(&TextureRect, UpdateCount);
+        }
+        else
+        {
+            CharacterIdle(&TextureRect, UpdateCount);
         }
 
         SDL_assert(SpriteSheet);
