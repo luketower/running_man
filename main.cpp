@@ -25,7 +25,7 @@ global character_state CharacterState;
 global game_window GameWindow;
 global int UpdateCount = 0;
 
-void CharacterJump(SDL_Rect *TextureRect, int UpdateCount)
+void CharacterJump(SDL_Rect *TextureRect)
 {
     TextureRect->y = TextureRect->h * 2;
     TextureRect->x = 0;
@@ -49,7 +49,7 @@ void CharacterJump(SDL_Rect *TextureRect, int UpdateCount)
 
 }
 
-void CharacterRun(SDL_Rect *TextureRect, int UpdateCount)
+void CharacterRun(SDL_Rect *TextureRect)
 {
     TextureRect->y = TextureRect->h;
 
@@ -83,7 +83,7 @@ void CharacterRun(SDL_Rect *TextureRect, int UpdateCount)
     }
 }
 
-void CharacterIdle(SDL_Rect *TextureRect, int UpdateCount)
+void CharacterIdle(SDL_Rect *TextureRect)
 {
     if (UpdateCount < 25)
     {
@@ -223,16 +223,16 @@ int main(int argc, char *argv[])
             }
             else
             {
-                CharacterJump(&TextureRect, UpdateCount);
+                CharacterJump(&TextureRect);
             }
         }
         else if (CharacterState.IsRunning)
         {
-            CharacterRun(&TextureRect, UpdateCount);
+            CharacterRun(&TextureRect);
         }
         else
         {
-            CharacterIdle(&TextureRect, UpdateCount);
+            CharacterIdle(&TextureRect);
         }
 
         SDL_assert(SpriteSheet);
